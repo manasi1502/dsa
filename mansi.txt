@@ -1,0 +1,232 @@
+//--------->1st
+
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+int buffer[5], in = 0, out = 0;
+
+sem_t empty, full;
+pthread_mutex_t mutex;
+
+void* producer(void* arg)
+{
+    for(int i = 1; i <= 5; i++)
+    {
+        sem_wait(&empty);
+        pthread_mutex_lock(&mutex);
+
+        buffer[in] = i;
+        printf("Produced: %d\n", i);
+        in = (in + 1) % 5;
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&full);
+    }
+    return NULL;
+}
+
+void* consumer(void* arg)
+{
+    for(int i = 1; i <= 5; i++)
+    {
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+
+        int item = buffer[out];
+        printf("Consumed: %d\n", item);
+        out = (out + 1) % 5;
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+    }
+    return NULL;
+}
+
+int main()
+{
+    pthread_t p, c;
+
+    sem_init(&empty, 0, 5);
+    sem_init(&full, 0, 0);
+    pthread_mutex_init(&mutex, NULL);
+
+    pthread_create(&p, NULL, producer, NULL);
+    pthread_create(&c, NULL, consumer, NULL);
+
+    pthread_join(p, NULL);
+    pthread_join(c, NULL);
+
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    pthread_mutex_destroy(&mutex);
+
+    return 0;
+}
+
+
+
+
+//------>2nd
+
+#!/bin/bash
+
+FILE="addressbook.txt"
+
+while true
+do
+    echo ""
+    echo "===== ADDRESS BOOK MENU ====="
+    echo "1. Create Address Book"
+    echo "2. View Address Book"
+    echo "3. Insert a Record"
+    echo "4. Delete a Record"
+    echo "5. Modify a Record"
+    echo "6. Exit"
+
+    read -p "Enter your choice: " ch
+
+    case $ch in
+
+    1)
+        touch "$FILE"
+        echo "Address Book Created Successfully!"
+        ;;
+
+    2)
+        if [ -f "$FILE" ]; then
+            echo "----- ADDRESS BOOK -----"
+            cat "$FILE"
+        else
+            echo "Address Book does not exist!"
+        fi
+        ;;
+
+    3)
+        touch "$FILE"
+
+        read -p "Enter Name: " name
+        read -p "Enter Phone Number: " phone
+        read -p "Enter Email: " email
+
+        echo "$name | $phone | $email" >> "$FILE"
+        echo "Record Inserted Successfully!"
+        ;;
+
+    4)
+        read -p "Enter Name to Delete: " name
+
+        if [ -f "$FILE" ]; then
+            grep -Fiv "^$name |" "$FILE" > temp.txt
+            mv temp.txt "$FILE"
+            echo "Record Deleted Successfully!"
+        else
+            echo "Address Book does not exist!"
+        fi
+        ;;
+
+    5)
+        read -p "Enter Name to Modify: " name
+
+        if [ -f "$FILE" ] && grep -Fqi "$name |" "$FILE"; then
+
+            grep -Fiv "$name |" "$FILE" > temp.txt
+
+            read -p "Enter New Name: " newname
+            read -p "Enter New Phone Number: " newphone
+            read -p "Enter New Email: " newemail
+
+            echo "$newname | $newphone | $newemail" >> temp.txt
+            mv temp.txt "$FILE"
+
+            echo "Record Modified Successfully!"
+        else
+            echo "Record Not Found!"
+        fi
+        ;;
+
+    6)
+        echo "Exiting Address Book..."
+        exit 0
+        ;;
+
+    *)
+        echo "Invalid Choice! Please Try Again."
+        ;;
+
+    esac
+done
+
+
+//--------->3rd
+
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+int main()
+{
+    int p1[2], p2[2];
+    pid_t pid;
+    char filename[100], buffer[1000];
+    int n;
+    FILE *fp;
+
+    pipe(p1);
+    pipe(p2);
+
+    pid = fork();
+
+    if (pid == 0)
+    {
+        // Child Process
+        close(p1[1]);
+        close(p2[0]);
+
+        read(p1[0], filename, sizeof(filename));
+
+        fp = fopen(filename, "r");
+
+        if (fp == NULL)
+        {
+            char msg[] = "File not found!";
+            write(p2[1], msg, strlen(msg) + 1);
+        }
+        else
+        {
+            while ((n = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+            {
+                write(p2[1], buffer, n);
+            }
+            fclose(fp);
+        }
+
+        close(p1[0]);
+        close(p2[1]);
+    }
+    else if (pid > 0)
+    {
+        // Parent Process
+        close(p1[0]);
+        close(p2[1]);
+
+        printf("Enter file name: ");
+        scanf("%99s", filename);
+
+        write(p1[1], filename, strlen(filename) + 1);
+        close(p1[1]);
+
+        printf("\nFile Contents:\n");
+
+        while ((n = read(p2[0], buffer, sizeof(buffer))) > 0)
+        {
+            write(1, buffer, n);
+        }
+
+        close(p2[0]);
+        wait(NULL);
+    }
+
+    return 0;
+}
