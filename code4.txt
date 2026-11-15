@@ -1,0 +1,69 @@
+print("==")
+print("     STUDENT EXPERT SYSTEM")
+print("==")
+
+
+attendance = int(input("Enter attendance percentage: "))
+marks = int(input("Enter exam marks: "))
+
+
+facts = {
+    "good_attendance": attendance >= 75,
+    "passing_marks": marks >= 40
+}
+
+
+rules = {
+    "eligible_for_exam": ["good_attendance"],
+    "student_pass": ["passing_marks", "good_attendance"]
+}
+
+
+def forward_chaining(facts, rules):
+
+    print("\n--- FORWARD CHAINING ---")
+
+    for rule, conditions in rules.items():
+
+        if all(facts.get(condition, False) for condition in conditions):
+            facts[rule] = True
+            print(rule, "is TRUE")
+        else:
+            facts[rule] = False
+            print(rule, "is FALSE")
+
+    return facts
+
+
+
+def backward_chaining(goal, facts, rules):
+
+    if goal in facts:
+        return facts[goal]
+
+    if goal in rules:
+        conditions = rules[goal]
+
+        for condition in conditions:
+            if not backward_chaining(condition, facts, rules):
+                return False
+
+        return True
+
+    return False
+
+
+
+facts = forward_chaining(facts, rules)
+
+
+print("\n--- BACKWARD CHAINING ---")
+
+goal = "student_pass"
+
+if backward_chaining(goal, facts, rules):
+    print("Goal achieved: Student is eligible to pass.")
+else:
+    print("Goal not achieved: Student is not eligible to pass.")
+
+print("\nProgram executed successfully!")
