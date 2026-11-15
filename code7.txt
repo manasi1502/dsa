@@ -1,0 +1,277 @@
+import pandas as pd
+
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn.metrics import (
+
+   accuracy_score,
+
+   precision_score,
+
+   recall_score,
+
+   f1_score,
+
+   confusion_matrix,
+
+   classification_report,
+
+   ConfusionMatrixDisplay
+
+)
+
+iris = load_iris()
+
+X = pd.DataFrame(
+
+   iris.data,
+
+   columns=iris.feature_names
+
+)
+
+y = pd.Series(iris.target, name="target")
+
+print("First 5 records:")
+
+print(X.head())
+
+print("\nTarget classes:")
+
+print(iris.target_names)
+
+print("\nDataset shape:")
+
+print(X.shape)
+
+print("\nMissing values:")
+
+print(X.isnull().sum())
+
+X_train, X_test, y_train, y_test = train_test_split(
+
+   X,
+
+   y,
+
+   test_size=0.20,
+
+   random_state=42,
+
+   stratify=y
+
+)
+
+print("\nTraining data shape:", X_train.shape)
+
+print("Testing data shape:", X_test.shape)
+
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+
+X_test_scaled = scaler.transform(X_test)
+
+logistic_model = LogisticRegression(max_iter=200)
+
+logistic_model.fit(X_train_scaled, y_train)
+
+y_pred_lr = logistic_model.predict(X_test_scaled)
+
+knn_model = KNeighborsClassifier(n_neighbors=5)
+
+knn_model.fit(X_train_scaled, y_train)
+
+y_pred_knn = knn_model.predict(X_test_scaled)
+
+def evaluate_model(model_name, y_test, y_pred):
+
+   print("\n===================================")
+
+   print(model_name)
+
+   print("===================================")
+
+   accuracy = accuracy_score(y_test, y_pred)
+
+   precision = precision_score(
+
+       y_test,
+
+       y_pred,
+
+       average="weighted"
+
+   )
+
+   recall = recall_score(
+
+       y_test,
+
+       y_pred,
+
+       average="weighted"
+
+   )
+
+   f1 = f1_score(
+
+       y_test,
+
+       y_pred,
+
+       average="weighted"
+
+   )
+
+   print("Accuracy :", accuracy)
+
+   print("Precision:", precision)
+
+   print("Recall  :", recall)
+
+   print("F1-Score :", f1)
+
+   print("\nClassification Report:")
+
+   print(
+
+       classification_report(
+
+           y_test,
+
+           y_pred,
+
+           target_names=iris.target_names
+
+       )
+
+   )
+
+   print("Confusion Matrix:")
+
+   cm = confusion_matrix(y_test, y_pred)
+
+   print(cm)
+
+   return accuracy, precision, recall, f1, cm
+
+lr_results = evaluate_model(
+
+   "Logistic Regression",
+
+   y_test,
+
+   y_pred_lr
+
+)
+
+knn_results = evaluate_model(
+
+   "K-Nearest Neighbors (KNN)",
+
+   y_test,
+
+   y_pred_knn
+
+)
+
+results = pd.DataFrame({
+
+   "Model": [
+
+       "Logistic Regression",
+
+       "KNN"
+
+   ],
+
+   "Accuracy": [
+
+       lr_results[0],
+
+       knn_results[0]
+
+   ],
+
+   "Precision": [
+
+       lr_results[1],
+
+       knn_results[1]
+
+   ],
+
+   "Recall": [
+
+       lr_results[2],
+
+       knn_results[2]
+
+   ],
+
+   "F1-Score": [
+
+       lr_results[3],
+
+       knn_results[3]
+
+   ]
+
+})
+
+ 
+
+print("\n===================================")
+
+print("MODEL COMPARISON")
+
+print("===================================")
+
+print(results)
+
+ 
+
+ 
+
+cm_lr = confusion_matrix(y_test, y_pred_lr)
+
+disp_lr = ConfusionMatrixDisplay(
+
+   confusion_matrix=cm_lr,
+
+   display_labels=iris.target_names
+
+)
+
+disp_lr.plot()
+
+plt.title("Confusion Matrix - Logistic Regression")
+
+plt.show()
+
+cm_knn = confusion_matrix(y_test, y_pred_knn)
+
+disp_knn = ConfusionMatrixDisplay(
+
+   confusion_matrix=cm_knn,
+
+   display_labels=iris.target_names
+
+)
+
+disp_knn.plot()
+
+plt.title("Confusion Matrix - KNN")
+
+plt.show()
