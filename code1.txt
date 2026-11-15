@@ -1,0 +1,169 @@
+////1.1///////
+
+
+class SmartHomeAgent:
+    def __init__(self):
+        self.light = "OFF"
+        self.ac = "OFF"
+        self.fan = "OFF"
+        self.alarm = "OFF"
+    
+    def perceive(self, temperature, light_level, motion):
+        
+        if temperature > 30:
+            self.ac = "ON"
+            self.fan = "ON"
+        else:
+            self.ac = "OFF"
+            self.fan = "OFF"
+        
+        if light_level < 40:
+            self.light = "ON"
+        else:
+            self.light = "OFF"
+        
+        if motion:
+            self.alarm = "OFF"
+        else:
+            self.alarm = "ON"
+   
+
+ 
+    def display_status(self):
+        print("\n----- SMART HOME STATUS -----")
+        print("Light           :", self.light)
+        print("Air Conditioner :", self.ac)
+        print("Fan             :", self.fan)
+        print("Security Alarm  :", self.alarm)
+
+agent = SmartHomeAgent()
+
+temperature = float(
+    input("Enter temperature (°C): ")
+)
+light_level = int(
+    input("Enter light intensity (0-100): ")
+)
+motion_input = input(
+    "Is motion detected? (yes/no): "
+).lower()
+motion_detected = motion_input == "yes"
+
+agent.perceive(
+    temperature,
+    light_level,
+    motion_detected
+)
+
+agent.display_status()
+
+
+///1.2 ///
+
+
+class ChatbotAgent:
+
+    def __init__(self):
+        self.response = ""
+
+    
+    def perceive(self, message):
+
+        message = message.lower()
+
+        
+        if "hello" in message or "hi" in message:
+            self.response = "Hello! How can I help you?"
+
+        
+        elif "how are you" in message:
+            self.response = "I am fine! Thank you for asking."
+
+        
+        elif "help" in message:
+            self.response = "Sure! I can answer simple questions."
+
+        
+        elif "bye" in message:
+            self.response = "Goodbye! Have a nice day."
+
+        
+        else:
+            self.response = "Sorry, I don't understand that."
+
+   
+    def display_response(self):
+
+        print("\n----- CHATBOT RESPONSE -----")
+        print("Bot :", self.response)
+
+
+
+agent = ChatbotAgent()
+
+
+message = input("You: ")
+
+
+agent.perceive(message)
+
+
+agent.display_response()
+
+
+
+
+///1.3///
+
+class RecommendationAgent:
+
+    def __init__(self):
+        self.recommendation = ""
+
+    
+    def perceive(self, genre, rating):
+        genre = genre.lower()
+
+       
+        if genre == "action" and rating >= 7:
+            self.recommendation = "Recommended: Avengers: Endgame"
+
+        
+        elif genre == "comedy" and rating >= 7:
+            self.recommendation = "Recommended: 3 Idiots"
+
+        
+        elif genre == "sci-fi" and rating >= 7:
+            self.recommendation = "Recommended: Interstellar"
+
+       
+        elif genre == "romance" and rating >= 7:
+            self.recommendation = "Recommended: The Notebook"
+
+        
+        elif rating < 7:
+            self.recommendation = "Try movies with a rating of 7 or above."
+
+        
+        else:
+            self.recommendation = "Sorry, no recommendation available."
+
+   
+    def display_recommendation(self):
+        print("\n----- MOVIE RECOMMENDATION -----")
+        print(self.recommendation)
+
+
+
+agent = RecommendationAgent()
+
+
+genre = input("Enter your favorite genre (action/comedy/sci-fi/romance): ")
+
+rating = float(input("Enter minimum preferred rating (0-10): "))
+
+
+agent.perceive(genre, rating)
+
+
+agent.display_recommendation()
