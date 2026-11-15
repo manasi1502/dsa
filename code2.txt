@@ -1,0 +1,86 @@
+import time
+
+# Creating a graph
+graph = {
+    'A': ['B', 'C'],
+    'B': ['D', 'E'],
+    'C': ['F'],
+    'D': [],
+    'E': ['G'],
+    'F': ['G'],
+    'G': []
+}
+
+# Breadth First Search
+def BFS(start, goal):
+    queue = [[start]]
+    visited = []
+
+    while queue:
+        path = queue.pop(0)
+        node = path[-1]
+
+        if node not in visited:
+            visited.append(node)
+
+            if node == goal:
+                return path, visited
+
+            for neighbour in graph[node]:
+                new_path = path + [neighbour]
+                queue.append(new_path)
+
+    return None, visited
+
+
+# Depth First Search
+def DFS(start, goal):
+    stack = [[start]]
+    visited = []
+
+    while stack:
+        path = stack.pop()
+        node = path[-1]
+
+        if node not in visited:
+            visited.append(node)
+
+            if node == goal:
+                return path, visited
+
+            for neighbour in reversed(graph[node]):
+                new_path = path + [neighbour]
+                stack.append(new_path)
+
+    return None, visited
+
+
+# Taking input
+start = input("Enter starting node: ").upper()
+goal = input("Enter destination node: ").upper()
+
+# BFS execution
+t1 = time.time()
+bfs_path, bfs_visited = BFS(start, goal)
+bfs_time = (time.time() - t1) * 1000
+
+# DFS execution
+t1 = time.time()
+dfs_path, dfs_visited = DFS(start, goal)
+dfs_time = (time.time() - t1) * 1000
+
+# Display BFS result
+print("\n----- BFS RESULT -----")
+print("Path:", bfs_path)
+print("Path Length:", len(bfs_path) - 1 if bfs_path else 0)
+print("Nodes Explored:", len(bfs_visited))
+print("Execution Time:", round(bfs_time, 6), "ms")
+
+# Display DFS result
+print("\n----- DFS RESULT -----")
+print("Path:", dfs_path)
+print("Path Length:", len(dfs_path) - 1 if dfs_path else 0)
+print("Nodes Explored:", len(dfs_visited))
+print("Execution Time:", round(dfs_time, 6), "ms")
+
+print("\nProgram executed successfully!")
