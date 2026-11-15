@@ -1,0 +1,175 @@
+import numpy as np
+
+import pandas as pd
+
+import matplotlib.pyplot as plt
+
+ 
+
+from sklearn.datasets import load_breast_cancer
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.decomposition import PCA
+
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.metrics import accuracy_score, classification_report
+
+ 
+
+data = load_breast_cancer()
+
+X = data.data
+
+y = data.target
+
+ 
+
+print("Original Dataset Shape:", X.shape)
+
+print("Number of Original Features:", X.shape[1])
+
+ 
+
+X_train, X_test, y_train, y_test = train_test_split(
+
+   X, y, test_size=0.2, random_state=42
+
+)
+
+ 
+
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+
+X_test_scaled = scaler.transform(X_test)
+
+ 
+
+model = LogisticRegression(max_iter=5000)
+
+model.fit(X_train_scaled, y_train)
+
+ 
+
+y_pred = model.predict(X_test_scaled)
+
+accuracy_before = accuracy_score(y_test, y_pred)
+
+ 
+
+print("\nAccuracy Before PCA:", accuracy_before * 100, "%")
+
+ 
+
+pca = PCA(n_components=2)
+
+ 
+
+X_train_pca = pca.fit_transform(X_train_scaled)
+
+X_test_pca = pca.transform(X_test_scaled)
+
+ 
+
+print("\nReduced Dataset Shape:", X_train_pca.shape)
+
+print("Number of Reduced Features:", X_train_pca.shape[1])
+
+print("Explained Variance Ratio:", pca.explained_variance_ratio_)
+
+print("Total Explained Variance:", sum(pca.explained_variance_ratio_) * 100, "%")
+
+ 
+
+plt.figure(figsize=(8, 6))
+
+plt.scatter(
+
+   X_train_pca[:, 0],
+
+   X_train_pca[:, 1],
+
+   c=y_train,
+
+   cmap='viridis'
+
+)
+
+plt.xlabel("Principal Component 1")
+
+plt.ylabel("Principal Component 2")
+
+plt.title("PCA - 2D Visualization")
+
+plt.colorbar(label="Class")
+
+plt.show()
+
+ 
+
+model_pca = LogisticRegression(max_iter=5000)
+
+model_pca.fit(X_train_pca, y_train)
+
+ 
+
+y_pred_pca = model_pca.predict(X_test_pca)
+
+accuracy_after = accuracy_score(y_test, y_pred_pca)
+
+ 
+
+print("\nAccuracy After PCA:", accuracy_after * 100, "%")
+
+ 
+
+print("\n----- Classification Performance -----")
+
+print("Before PCA:", accuracy_before * 100, "%")
+
+print("After PCA:", accuracy_after * 100, "%")
+
+ 
+
+labels = ["Before PCA", "After PCA"]
+
+accuracies = [accuracy_before * 100, accuracy_after * 100]
+
+ 
+
+plt.figure(figsize=(7, 5))
+
+plt.bar(labels, accuracies)
+
+plt.xlabel("Classification Method")
+
+plt.ylabel("Accuracy (%)")
+
+plt.title("Accuracy Comparison Before and After PCA")
+
+plt.ylim(0, 100)
+
+plt.show()
+
+ 
+
+print("\nClassification Report Before PCA:")
+
+print(classification_report(y_test, y_pred))
+
+ 
+
+print("\nClassification Report After PCA:")
+
+print(classification_report(y_test, y_pred_pca))
+
+ 
+
+print("\nPCA Applied Successfully!")
+
+print("Features reduced from", X.shape[1], "to", pca.n_components_)
