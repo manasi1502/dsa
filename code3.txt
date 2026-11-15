@@ -1,0 +1,104 @@
+import heapq
+
+
+graph = {
+    'S': {'A': 1, 'B': 2},
+    'A': {'C': 2},
+    'B': {'D': 2},
+    'C': {'G': 2},
+    'D': {'G': 10},
+    'G': {}
+}
+
+
+heuristic = {
+    'S': 4,
+    'A': 4,
+    'B': 2,
+    'C': 2,
+    'D': 1,
+    'G': 0
+}
+
+
+
+def greedy_best_first(start, goal):
+    pq = [(heuristic[start], start, [start])]
+    visited = set()
+
+    while pq:
+        h, node, path = heapq.heappop(pq)
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+
+        if node == goal:
+            return path, len(visited)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                heapq.heappush(
+                    pq,
+                    (heuristic[neighbor], neighbor,
+                     path + [neighbor])
+                )
+
+    return None, len(visited)
+
+
+
+def a_star(start, goal):
+    pq = [(heuristic[start], 0, start, [start])]
+    g_cost = {start: 0}
+    visited = set()
+
+    while pq:
+        f, g, node, path = heapq.heappop(pq)
+
+        if g > g_cost.get(node, float('inf')):
+            continue
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+
+        if node == goal:
+            return path, g, len(visited)
+
+        for neighbor, cost in graph[node].items():
+            new_g = g + cost
+
+            if new_g < g_cost.get(neighbor, float('inf')):
+                g_cost[neighbor] = new_g
+                new_f = new_g + heuristic[neighbor]
+
+                heapq.heappush(
+                    pq,
+                    (new_f, new_g, neighbor,
+                     path + [neighbor])
+                )
+
+    return None, float('inf'), len(visited)
+
+
+
+start = 'S'
+goal = 'G'
+
+print("Greedy Best First Search:")
+path, count = greedy_best_first(start, goal)
+print("Path:", path)
+if path:
+    cost = sum(graph[path[i]][path[i+1]]
+               for i in range(len(path)-1))
+    print("Total Cost:", cost)
+print("Nodes Visited:", count)
+
+print("\nA* Search:")
+path, cost, count = a_star(start, goal)
+print("Path:", path)
+print("Total Cost:", cost)
+print("Nodes Visited:", count)
