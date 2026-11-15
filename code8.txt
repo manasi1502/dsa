@@ -1,0 +1,403 @@
+# =====================================================
+
+# PR8: Classification using Decision Tree and Naive Bayes
+
+# =====================================================
+
+# -----------------------------------------------------
+
+# 1. Import Required Libraries
+
+# -----------------------------------------------------
+
+import pandas as pd
+
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+
+from sklearn.naive_bayes import GaussianNB
+
+from sklearn.metrics import (
+
+   accuracy_score,
+
+   precision_score,
+
+   recall_score,
+
+   f1_score,
+
+   confusion_matrix,
+
+   classification_report,
+
+   ConfusionMatrixDisplay
+
+)
+
+# -----------------------------------------------------
+
+# 2. Load Iris Dataset
+
+# -----------------------------------------------------
+
+iris = load_iris()
+
+X = pd.DataFrame(
+
+   iris.data,
+
+   columns=iris.feature_names
+
+)
+
+y = pd.Series(
+
+   iris.target,
+
+   name="target"
+
+)
+
+print("First 5 records:")
+
+print(X.head())
+
+print("\nTarget classes:")
+
+print(iris.target_names)
+
+# -----------------------------------------------------
+
+# 3. Check Dataset Information
+
+# -----------------------------------------------------
+
+print("\nDataset shape:")
+
+print(X.shape)
+
+print("\nMissing values:")
+
+print(X.isnull().sum())
+
+# -----------------------------------------------------
+
+# 4. Split Dataset into Training and Testing
+
+# -----------------------------------------------------
+
+X_train, X_test, y_train, y_test = train_test_split(
+
+   X,
+
+   y,
+
+   test_size=0.20,
+
+   random_state=42,
+
+   stratify=y
+
+)
+
+print("\nTraining data shape:")
+
+print(X_train.shape)
+
+ 
+
+print("\nTesting data shape:")
+
+print(X_test.shape)
+
+# -----------------------------------------------------
+
+# 5. Decision Tree Classifier
+
+# -----------------------------------------------------
+
+dt_model = DecisionTreeClassifier(
+
+   criterion="gini",
+
+   max_depth=3,
+
+   random_state=42
+
+)
+
+dt_model.fit(X_train, y_train)
+
+# Prediction
+
+y_pred_dt = dt_model.predict(X_test)
+
+# -----------------------------------------------------
+
+# 6. Naive Bayes Classifier
+
+# -----------------------------------------------------
+
+nb_model = GaussianNB()
+
+nb_model.fit(X_train, y_train)
+
+# Prediction
+
+y_pred_nb = nb_model.predict(X_test)
+
+# -----------------------------------------------------
+
+# 7. Evaluation Function
+
+# -----------------------------------------------------
+
+def evaluate_model(model_name, y_test, y_pred):
+
+   print("\n======================================")
+
+   print(model_name)
+
+   print("======================================")
+
+ 
+
+   accuracy = accuracy_score(y_test, y_pred)
+
+   precision = precision_score(
+
+       y_test,
+
+       y_pred,
+
+       average="weighted"
+
+   )
+
+   recall = recall_score(
+
+       y_test,
+
+       y_pred,
+
+       average="weighted"
+
+   )
+
+   f1 = f1_score(
+
+       y_test,
+
+       y_pred,
+
+       average="weighted"
+
+   )
+
+   print("Accuracy :", accuracy)
+
+   print("Precision:", precision)
+
+   print("Recall  :", recall)
+
+   print("F1-Score :", f1)
+
+   print("\nClassification Report:")
+
+   print(
+
+       classification_report(
+
+           y_test,
+
+           y_pred,
+
+           target_names=iris.target_names
+
+       )
+
+   )
+
+   print("Confusion Matrix:")
+
+   cm = confusion_matrix(y_test, y_pred)
+
+   print(cm)
+
+   return accuracy, precision, recall, f1, cm
+
+# -----------------------------------------------------
+
+# 8. Evaluate Decision Tree
+
+# -----------------------------------------------------
+
+dt_results = evaluate_model(
+
+   "Decision Tree",
+
+   y_test,
+
+   y_pred_dt
+
+)
+
+# -----------------------------------------------------
+
+# 9. Evaluate Naive Bayes
+
+# -----------------------------------------------------
+
+nb_results = evaluate_model(
+
+   "Naive Bayes",
+
+   y_test,
+
+   y_pred_nb
+
+)
+
+# -----------------------------------------------------
+
+# 10. Compare Model Performance
+
+# -----------------------------------------------------
+
+results = pd.DataFrame({
+
+   "Model": [
+
+       "Decision Tree",
+
+       "Naive Bayes"
+
+   ],
+
+   "Accuracy": [
+
+       dt_results[0],
+
+       nb_results[0]
+
+   ],
+
+   "Precision": [
+
+       dt_results[1],
+
+       nb_results[1]
+
+   ],
+
+   "Recall": [
+
+       dt_results[2],
+
+       nb_results[2]
+
+   ],
+
+   "F1-Score": [
+
+       dt_results[3],
+
+       nb_results[3]
+
+   ]
+
+})
+
+print("\n======================================")
+
+print("MODEL COMPARISON")
+
+print("======================================")
+
+print(results)
+
+# -----------------------------------------------------
+
+# 11. Confusion Matrix - Decision Tree
+
+# -----------------------------------------------------
+
+cm_dt = confusion_matrix(
+
+   y_test,
+
+   y_pred_dt
+
+)
+
+disp_dt = ConfusionMatrixDisplay(
+
+   confusion_matrix=cm_dt,
+
+   display_labels=iris.target_names
+
+)
+
+disp_dt.plot()
+
+plt.title("Confusion Matrix - Decision Tree")
+
+plt.show()
+
+# -----------------------------------------------------
+
+# 12. Confusion Matrix - Naive Bayes
+
+# -----------------------------------------------------
+
+cm_nb = confusion_matrix(
+
+   y_test,
+
+   y_pred_nb
+
+)
+
+disp_nb = ConfusionMatrixDisplay(
+
+   confusion_matrix=cm_nb,
+
+   display_labels=iris.target_names
+
+)
+
+disp_nb.plot()
+
+plt.title("Confusion Matrix - Naive Bayes")
+
+plt.show()
+
+# -----------------------------------------------------
+
+# 13. Visualize Decision Tree
+
+# -----------------------------------------------------
+
+plt.figure(figsize=(15, 8))
+
+plot_tree(
+
+   dt_model,
+
+   feature_names=iris.feature_names,
+
+   class_names=iris.target_names,
+
+   filled=True
+
+)
+
+plt.title("Decision Tree for Iris Dataset")
+
+plt.show()
