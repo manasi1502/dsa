@@ -1161,229 +1161,566 @@ else:
 ///11////
 
 
-
-
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from sklearn.datasets import load_iris
+ 
+
+from sklearn.datasets import load_breast_cancer
+
 from sklearn.model_selection import train_test_split
 
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import StratifiedKFold
 
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-    classification_report,
-    ConfusionMatrixDisplay
-)
+from sklearn.model_selection import cross_val_score
 
+from sklearn.model_selection import GridSearchCV
 
-iris = load_iris()
+ 
 
-X = pd.DataFrame(
-    iris.data,
-    columns=iris.feature_names
-)
+from sklearn.pipeline import Pipeline
 
-y = pd.Series(
-    iris.target,
-    name="target"
-)
+from sklearn.preprocessing import StandardScaler
 
-print("First 5 records:")
-print(X.head())
+ 
 
-print("\nTarget classes:")
-print(iris.target_names)
+from sklearn.svm import SVC
 
+from sklearn.ensemble import RandomForestClassifier
 
+from sklearn.ensemble import AdaBoostClassifier
 
-print("\nDataset shape:")
-print(X.shape)
+ 
 
-print("\nMissing values:")
-print(X.isnull().sum())
+from sklearn.metrics import accuracy_score
 
+from sklearn.metrics import precision_score
+
+from sklearn.metrics import recall_score
+
+from sklearn.metrics import f1_score
+
+ 
+
+# 1. Load Dataset
+
+data = load_breast_cancer()
+
+ 
+
+X = data.data
+
+y = data.target
+
+ 
+
+print("=" * 65)
+
+print("ADVANCED MACHINE LEARNING AND MODEL OPTIMIZATION")
+
+print("=" * 65)
+
+ 
+
+print("Dataset        : Breast Cancer Wisconsin")
+
+print("Samples        :", X.shape[0])
+
+print("Features       :", X.shape[1])
+
+ 
+
+# 2. Split Dataset
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.20,
-    random_state=42,
-    stratify=y
+
+   X,
+
+   y,
+
+   test_size=0.20,
+
+   random_state=42,
+
+   stratify=y
+
 )
 
-print("\nTraining data shape:")
-print(X_train.shape)
+ 
 
-print("\nTesting data shape:")
-print(X_test.shape)
+print("Training data  :", X_train.shape[0])
 
+print("Testing data   :", X_test.shape[0])
 
-dt_model = DecisionTreeClassifier(
-    criterion="gini",
-    max_depth=3,
-    random_state=42
+ 
+
+# 3. Create Models
+
+models = {
+
+ 
+
+   "SVM": Pipeline([
+
+       ("scaler", StandardScaler()),
+
+       ("classifier", SVC(
+
+           kernel="rbf",
+
+           C=1.0,
+
+           gamma="scale"
+
+       ))
+
+   ]),
+
+ 
+
+   "Random Forest": RandomForestClassifier(
+
+       n_estimators=100,
+
+       random_state=42
+
+   ),
+
+ 
+
+   "AdaBoost": AdaBoostClassifier(
+
+       n_estimators=50,
+
+       learning_rate=1.0,
+
+       random_state=42
+
+   )
+
+}
+
+# 4. 5-Fold Cross Validation
+
+cv = StratifiedKFold(
+
+   n_splits=5,
+
+   shuffle=True,
+
+   random_state=42
+
 )
 
-dt_model.fit(X_train, y_train)
+ 
 
+# 5. Evaluate BEFORE Optimization
 
-y_pred_dt = dt_model.predict(X_test)
+before_results = []
 
+ 
 
-nb_model = GaussianNB()
+print("\n" + "=" * 65)
 
-nb_model.fit(X_train, y_train)
+print("PERFORMANCE BEFORE OPTIMIZATION")
 
+print("=" * 65)
 
-y_pred_nb = nb_model.predict(X_test)
+ 
 
+for name, model in models.items():
 
-def evaluate_model(model_name, y_test, y_pred):
+ 
 
-    print("\n")
-    print(model_name)
-    print("n")
+   # Cross validation
 
-    accuracy = accuracy_score(y_test, y_pred)
+   cv_scores = cross_val_score(
 
-    precision = precision_score(
-        y_test,
-        y_pred,
-        average="weighted"
-    )
+       model,
 
-    recall = recall_score(
-        y_test,
-        y_pred,
-        average="weighted"
-    )
+       X_train,
 
-    f1 = f1_score(
-        y_test,
-        y_pred,
-        average="weighted"
-    )
+       y_train,
 
-    print("Accuracy :", accuracy)
-    print("Precision:", precision)
-    print("Recall   :", recall)
-    print("F1-Score :", f1)
+       cv=cv,
 
-    print("\nClassification Report:")
-    print(
-        classification_report(
-            y_test,
-            y_pred,
-            target_names=iris.target_names
-        )
-    )
+       scoring="accuracy"
 
-    print("Confusion Matrix:")
-    cm = confusion_matrix(y_test, y_pred)
-    print(cm)
+   )
 
-    return accuracy, precision, recall, f1, cm
+ 
 
+   # Train model
 
+   model.fit(X_train, y_train)
 
-dt_results = evaluate_model(
-    "Decision Tree",
-    y_test,
-    y_pred_dt
-)
+ 
 
+   # Predict
 
-nb_results = evaluate_model(
-    "Naive Bayes",
-    y_test,
-    y_pred_nb
-)
+   y_pred = model.predict(X_test)
 
+ 
 
-results = pd.DataFrame({
+   # Metrics
 
-    "Model": [
-        "Decision Tree",
-        "Naive Bayes"
-    ],
+   accuracy = accuracy_score(y_test, y_pred)
 
-    "Accuracy": [
-        dt_results[0],
-        nb_results[0]
-    ],
+   precision = precision_score(y_test, y_pred)
 
-    "Precision": [
-        dt_results[1],
-        nb_results[1]
-    ],
+   recall = recall_score(y_test, y_pred)
 
-    "Recall": [
-        dt_results[2],
-        nb_results[2]
-    ],
+   f1 = f1_score(y_test, y_pred)
 
-    "F1-Score": [
-        dt_results[3],
-        nb_results[3]
-    ]
+ 
+
+   before_results.append({
+
+       "Model": name,
+
+       "CV Accuracy": cv_scores.mean(),
+
+       "Test Accuracy": accuracy,
+
+       "Precision": precision,
+
+       "Recall": recall,
+
+       "F1 Score": f1
+
+   })
+
+ 
+
+   print("\n" + name)
+
+   print("-" * 40)
+
+   print("CV Accuracy   :", round(cv_scores.mean(), 4))
+
+   print("Test Accuracy :", round(accuracy, 4))
+
+   print("Precision     :", round(precision, 4))
+
+   print("Recall        :", round(recall, 4))
+
+   print("F1 Score      :", round(f1, 4))
+
+ 
+
+# 6. Define Parameter Grids
+
+parameter_grids = {
+
+ 
+
+   "SVM": {
+
+       "classifier__C": [0.1, 1, 10, 100],
+
+       "classifier__gamma": ["scale", 0.001, 0.01, 0.1],
+
+       "classifier__kernel": ["rbf", "linear"]
+
+   },
+
+ 
+
+   "Random Forest": {
+
+       "n_estimators": [50, 100, 200],
+
+       "max_depth": [None, 5, 10, 20],
+
+       "min_samples_split": [2, 5, 10]
+
+   },
+
+ 
+
+   "AdaBoost": {
+
+       "n_estimators": [50, 100, 200],
+
+       "learning_rate": [0.01, 0.1, 0.5, 1.0]
+
+   }
+
+}
+
+ 
+
+ 
+
+# 7. Grid Search Optimization
+
+ 
+
+after_results = []
+
+ 
+
+print("\n" + "=" * 65)
+
+print("GRID SEARCH OPTIMIZATION")
+
+print("=" * 65)
+
+ 
+
+for name, model in models.items():
+
+ 
+
+   print("\nOptimizing:", name)
+
+ 
+
+   grid = GridSearchCV(
+
+       estimator=model,
+
+       param_grid=parameter_grids[name],
+
+       cv=cv,
+
+       scoring="accuracy",
+
+       n_jobs=-1
+
+   )
+
+ 
+
+   grid.fit(X_train, y_train)
+
+ 
+
+   # Best model
+
+   best_model = grid.best_estimator_
+
+ 
+
+   # Prediction
+
+   y_pred = best_model.predict(X_test)
+
+ 
+
+   # Metrics
+
+   accuracy = accuracy_score(y_test, y_pred)
+
+   precision = precision_score(y_test, y_pred)
+
+   recall = recall_score(y_test, y_pred)
+
+   f1 = f1_score(y_test, y_pred)
+
+ 
+
+   after_results.append({
+
+       "Model": name,
+
+       "CV Accuracy": grid.best_score_,
+
+       "Test Accuracy": accuracy,
+
+       "Precision": precision,
+
+       "Recall": recall,
+
+       "F1 Score": f1
+
+   })
+
+ 
+
+   print("Best Parameters:")
+
+   print(grid.best_params_)
+
+ 
+
+   print("Best CV Accuracy:",
+
+         round(grid.best_score_, 4))
+
+ 
+
+   print("Test Accuracy    :",
+
+         round(accuracy, 4))
+
+ 
+
+   print("Precision        :",
+
+         round(precision, 4))
+
+ 
+
+   print("Recall           :",
+
+         round(recall, 4))
+
+ 
+
+   print("F1 Score         :",
+
+         round(f1, 4))
+
+ 
+
+# 8. Create Comparison Table
+
+before_df = pd.DataFrame(before_results)
+
+after_df = pd.DataFrame(after_results)
+
+ 
+
+comparison = pd.DataFrame({
+
+ 
+
+   "Model": before_df["Model"],
+
+ 
+
+   "Before CV":
+
+       before_df["CV Accuracy"],
+
+ 
+
+   "After CV":
+
+       after_df["CV Accuracy"],
+
+ 
+
+   "Before Test":
+
+       before_df["Test Accuracy"],
+
+ 
+
+   "After Test":
+
+       after_df["Test Accuracy"],
+
+ 
+
+   "Before F1":
+
+       before_df["F1 Score"],
+
+ 
+
+   "After F1":
+
+       after_df["F1 Score"]
+
 })
 
-print("\n")
-print("MODEL COMPARISON")
-print("n")
+ 
 
-print(results)
+# 9. Display Comparison
 
+print("\n" + "=" * 65)
 
-cm_dt = confusion_matrix(
-    y_test,
-    y_pred_dt
+print("BEFORE vs AFTER OPTIMIZATION")
+
+print("=" * 65)
+
+ 
+
+print(
+
+   comparison.to_string(
+
+       index=False,
+
+       float_format=lambda x: f"{x:.4f}"
+
+   )
+
 )
 
-disp_dt = ConfusionMatrixDisplay(
-    confusion_matrix=cm_dt,
-    display_labels=iris.target_names
+# 10. Calculate Improvement
+
+ 
+
+print("\n" + "=" * 65)
+
+print("TEST ACCURACY IMPROVEMENT")
+
+print("=" * 65)
+
+ 
+
+for i in range(len(comparison)):
+
+ 
+
+   model = comparison.iloc[i]["Model"]
+
+ 
+
+   before = comparison.iloc[i]["Before Test"]
+
+   after = comparison.iloc[i]["After Test"]
+
+ 
+
+   improvement = (after - before) * 100
+
+ 
+
+   print(
+
+       f"{model:15s}: {improvement:+.2f}%"
+
+   )
+
+# 11. Final Result
+
+ 
+
+print("\n" + "=" * 65)
+
+print("FINAL RESULT")
+
+print("=" * 65)
+
+ 
+
+print(
+
+   comparison[
+
+       [
+
+           "Model",
+
+           "Before Test",
+
+           "After Test",
+
+           "Before F1",
+
+           "After F1"
+
+       ]
+
+   ].to_string(
+
+       index=False,
+
+       float_format=lambda x: f"{x:.4f}"
+
+   )
+
 )
-
-disp_dt.plot()
-
-plt.title("Confusion Matrix - Decision Tree")
-plt.show()
-
-
-
-cm_nb = confusion_matrix(
-    y_test,
-    y_pred_nb
-)
-
-disp_nb = ConfusionMatrixDisplay(
-    confusion_matrix=cm_nb,
-    display_labels=iris.target_names
-)
-
-disp_nb.plot()
-
-plt.title("Confusion Matrix - Naive Bayes")
-plt.show()
-
-
-plt.figure(figsize=(15, 8))
-
-plot_tree(
-    dt_model,
-    feature_names=iris.feature_names,
-    class_names=iris.target_names,
-    filled=True
-)
-
-plt.title("Decision Tree for Iris Dataset")
-plt.show()
-
